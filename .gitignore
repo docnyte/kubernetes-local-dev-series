@@ -1,0 +1,100 @@
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# uv
+.venv/
+uv.lock
+
+# Python Tools & Caches
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.tox/
+.pytest_cache/
+*.cover
+.coverage
+.coverage.*
+htmlcov/
+
+# IPython/Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# Build artifacts
+*.whl
+pip-wheel-metadata/
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+.settings/
+.classpath
+.project
+*.iml
+*.ipr
+*.iws
+
+# Maven
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# SpotBugs
+.spotbugs/
+spotbugsXml.xml
+
+# PMD
+.pmd/
+pmd.xml
+
+# Docker
+*.log
+
+# Kubernetes
+kubeconfig
+
+# Environment files
+.env
+.env.local
+*.pem
+*.key
+
+# OS
+Thumbs.db

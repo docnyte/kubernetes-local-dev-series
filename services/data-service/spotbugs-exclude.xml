@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude generated MapStruct mappers -->
+    <Match>
+        <Package name="~.*\.mapper\..*Impl"/>
+    </Match>
+
+    <!-- Exclude Spring Boot generated classes -->
+    <Match>
+        <Class name="~.*\.DataServiceApplication"/>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
+
+    <!-- Exclude test classes -->
+    <Match>
+        <Class name="~.*Test"/>
+    </Match>
+
+    <!-- Exclude Lombok generated code -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+        <Class name="~.*\.(entity|dto)\..*"/>
+    </Match>
+</FindBugsFilter>
