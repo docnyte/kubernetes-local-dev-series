@@ -1,1 +1,31 @@
-# TODO: Define ingress configuration
+# Ingress Configuration for NGINX
+# minikube uses NGINX ingress controller via addon: minikube addons enable ingress
+#
+# This configuration exposes the API service via HTTP
+# Access: http://<minikube-ip>/api/*
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: dev
+  labels:
+    app: api-service
+    component: ingress
+  annotations:
+    # NGINX-specific annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    # Default rule - matches any hostname
+    - http:
+        paths:
+          # Route /api/* to api-service
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8000

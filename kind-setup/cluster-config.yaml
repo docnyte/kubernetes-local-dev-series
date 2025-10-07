@@ -1,1 +1,105 @@
-# TODO: Configure kind cluster
+# kind Cluster Configuration File
+# API Version: kind.x-k8s.io/v1alpha4
+# Documentation: https://kind.sigs.k8s.io/docs/user/configuration/
+#
+# This configuration creates a local Kubernetes cluster for the three-tier
+# microservices architecture demo (FastAPI → Spring Boot → PostgreSQL).
+#
+# Cluster Topology:
+# - 1 control-plane node
+# - 2 worker nodes
+# - NGINX ingress controller (installed separately)
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+
+# Cluster name (optional - can be set via CLI)
+name: kind-local-dev
+
+# Node Configuration
+nodes:
+  # Control Plane Node
+  - role: control-plane
+    # Kubernetes version (optional - uses kind default if not specified)
+    # image: kindest/node:v1.28.0
+
+    # Labels for node selection
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+
+    # Port Mappings
+    # Maps host ports to container ports for ingress access
+    extraPortMappings:
+      # HTTP traffic to NGINX ingress controller
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      # HTTPS traffic to NGINX ingress controller
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+
+  # Worker Node 1
+  - role: worker
+    # Optional: Pin to specific Kubernetes version
+    # image: kindest/node:v1.28.0
+
+  # Worker Node 2
+  - role: worker
+    # Optional: Pin to specific Kubernetes version
+    # image: kindest/node:v1.28.0
+
+# Networking Configuration
+networking:
+  # API Server Configuration
+  # Default: 127.0.0.1:random-port (recommended for security)
+  # apiServerAddress: "127.0.0.1"
+  # apiServerPort: 6443
+
+  # Pod subnet (default: 10.244.0.0/16)
+  podSubnet: "10.244.0.0/16"
+
+  # Service subnet (default: 10.96.0.0/12)
+  serviceSubnet: "10.96.0.0/12"
+
+  # Disable default CNI - useful if you want to install your own
+  # disableDefaultCNI: false
+
+  # IP Family: ipv4, ipv6, or dual (default: ipv4)
+  ipFamily: ipv4
+
+# Kubeadm Config Patches
+# These patches configure the cluster to enable communication with external Docker containers
+kubeadmConfigPatches:
+  # Patch to add extra hosts for host.docker.internal resolution
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      extraArgs:
+        # Enable aggregation layer
+        enable-aggregator-routing: "true"
+    controllerManager:
+      extraArgs:
+        # Bind address for all interfaces
+        bind-address: "0.0.0.0"
+
+# Container Runtime Configuration
+# kind uses containerd by default
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
+      endpoint = ["http://localhost:5000"]
+
+# Feature Gates (optional)
+# Enable experimental Kubernetes features
+# featureGates:
+#   EphemeralContainers: true
+
+# Runtime Config (optional)
+# Enable alpha APIs
+# runtimeConfig:
+#   "api/alpha": "true"

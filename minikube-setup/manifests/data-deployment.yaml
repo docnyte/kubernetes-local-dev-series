@@ -1,1 +1,130 @@
-# TODO: Define Data service deployment
+# Data Service Deployment
+# Spring Boot application that connects to external PostgreSQL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-service
+  namespace: dev
+  labels:
+    app: data-service
+    component: backend
+    tier: data
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: data-service
+  template:
+    metadata:
+      labels:
+        app: data-service
+        component: backend
+        tier: data
+    spec:
+      containers:
+        - name: data-service
+          image: data-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          # Environment Variables
+          env:
+            # Server Configuration
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATA_PORT
+
+            # Logging
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATA_LOG_LEVEL
+
+            # Database Configuration
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_NAME
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: DB_PASSWORD
+
+            # Java Options
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: JAVA_OPTS
+
+          # Resource Limits
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # Startup Probe
+          # Give the application time to initialize (Spring Boot can be slow)
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+
+          # Liveness Probe
+          # Check if application is running
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Readiness Probe
+          # Check if application is ready to serve traffic
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+      # Restart Policy
+      restartPolicy: Always
+
+      # DNS Policy
+      dnsPolicy: ClusterFirst

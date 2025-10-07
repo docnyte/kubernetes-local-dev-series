@@ -1,1 +1,109 @@
-# TODO: Define API service deployment
+# API Service Deployment
+# Python FastAPI application that serves as the public API
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-service
+  namespace: dev
+  labels:
+    app: api-service
+    component: frontend
+    tier: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-service
+  template:
+    metadata:
+      labels:
+        app: api-service
+        component: frontend
+        tier: api
+    spec:
+      containers:
+        - name: api-service
+          image: api-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          # Environment Variables
+          env:
+            # Server Configuration
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: API_PORT
+
+            # Logging
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: API_LOG_LEVEL
+
+            # Data Service URL
+            - name: DATA_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATA_SERVICE_URL
+
+            # Python Configuration
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+
+          # Resource Limits
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+
+          # Startup Probe
+          # Give the application time to initialize
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 10
+
+          # Liveness Probe
+          # Check if application is running
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          # Readiness Probe
+          # Check if application is ready to serve traffic
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+      # Restart Policy
+      restartPolicy: Always
+
+      # DNS Policy
+      dnsPolicy: ClusterFirst

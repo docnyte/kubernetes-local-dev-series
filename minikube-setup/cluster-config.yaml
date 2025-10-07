@@ -1,1 +1,114 @@
-# TODO: Configure Minikube cluster
+# Minikube Cluster Configuration
+# Documentation: https://minikube.sigs.k8s.io/docs/
+#
+# NOTE: Unlike kind and k3d, minikube does not use a declarative YAML config file
+# for cluster creation. Instead, it uses CLI flags and persistent configuration.
+# This file documents the recommended configuration for reference purposes.
+#
+# Cluster Configuration for three-tier microservices architecture demo
+# (FastAPI → Spring Boot → PostgreSQL)
+#
+# To create a cluster with these settings, use:
+#
+#   minikube start \
+#     --profile=minikube-local-dev \
+#     --driver=docker \
+#     --nodes=3 \
+#     --cpus=4 \
+#     --memory=4096 \
+#     --disk-size=20g \
+#     --kubernetes-version=stable \
+#     --addons=ingress \
+#     --addons=metrics-server
+#
+# Or use the provided setup.sh script which handles all configuration.
+
+---
+# Cluster Configuration (for reference)
+cluster:
+  name: minikube-local-dev
+
+  # Driver: docker, virtualbox, hyperkit, vmware, etc.
+  # docker is recommended for best compatibility
+  driver: docker
+
+  # Cluster Topology
+  # Control plane + worker nodes
+  nodes: 3
+
+  # Resource Allocation per node
+  cpus: 4
+  memory: 4096  # MB
+  disk_size: 20g
+
+  # Kubernetes Version
+  # Use 'stable' for latest stable, or specify version like 'v1.28.0'
+  kubernetes_version: stable
+
+  # Container Runtime
+  # Options: docker, containerd, cri-o
+  container_runtime: docker
+
+# Addons Configuration
+# Enable with: minikube addons enable <addon-name>
+addons:
+  # NGINX Ingress Controller
+  - ingress
+
+  # Metrics Server (for kubectl top)
+  - metrics-server
+
+  # Optional addons (can be enabled separately):
+  # - dashboard        # Kubernetes Dashboard UI
+  # - registry         # Local Docker registry
+  # - ingress-dns      # DNS resolution for ingress
+  # - storage-provisioner  # Dynamic volume provisioning (enabled by default)
+
+# Network Configuration
+networking:
+  # Access method for services
+  # Use 'minikube tunnel' for LoadBalancer services
+  # Use 'minikube service <name>' for NodePort services
+  access_method: tunnel
+
+  # Host Access
+  # Pods can access host services via: host.minikube.internal
+  # External PostgreSQL: host.minikube.internal:5432
+  host_access: host.minikube.internal
+
+  # Note: PostgreSQL must listen on 0.0.0.0, not just 127.0.0.1
+  # Update PostgreSQL config: listen_addresses = '*'
+  # Or bind to all interfaces in docker-compose
+
+# Environment Variables (for reference)
+# Set these before running minikube start:
+# export MINIKUBE_HOME=~/.minikube
+# export MINIKUBE_DRIVER=docker
+
+# Persistent Configuration
+# Save default settings across restarts:
+# minikube config set driver docker
+# minikube config set cpus 4
+# minikube config set memory 4096
+# minikube config set disk-size 20g
+
+# Profile Management
+# Create multiple independent clusters:
+# minikube start -p cluster1
+# minikube start -p cluster2
+# minikube profile list
+# minikube profile cluster1
+
+# Advanced Options
+advanced:
+  # Feature Gates
+  # minikube start --feature-gates=EphemeralContainers=true
+
+  # Extra Configuration
+  # minikube start --extra-config=kubelet.max-pods=110
+
+  # Mount Host Directory
+  # minikube mount /host/path:/minikube/path
+
+  # Custom Image Repository
+  # minikube start --image-repository=custom.registry.io

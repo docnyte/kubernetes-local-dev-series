@@ -1,1 +1,12 @@
-# TODO: Define namespace
+# Namespace Definition
+# Creates an isolated namespace for the three-tier application
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    name: dev
+    environment: development
+    project: kubernetes-local-dev
+    tool: kind
