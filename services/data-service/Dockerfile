@@ -4,10 +4,7 @@
 # Lint Stage (Optional - for CI/CD quality checks)
 # Build with: docker build --target=lint -t data-service:lint .
 # =============================================================================
-FROM eclipse-temurin:21-jdk-alpine AS lint
-
-# Install Maven
-RUN apk add --no-cache maven
+FROM maven:3.9-eclipse-temurin-21-alpine AS lint
 
 # Set working directory
 WORKDIR /app
@@ -39,10 +36,7 @@ RUN echo "Running Spotless formatting check..." && \
 # =============================================================================
 # Builder Stage (Build JAR)
 # =============================================================================
-FROM eclipse-temurin:21-jdk-alpine AS builder
-
-# Install Maven
-RUN apk add --no-cache maven
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 # Set working directory
 WORKDIR /app

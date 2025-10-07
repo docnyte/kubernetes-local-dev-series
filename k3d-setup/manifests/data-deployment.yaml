@@ -24,8 +24,8 @@ spec:
     spec:
       containers:
         - name: data-service
-          image: data-service:latest
-          imagePullPolicy: IfNotPresent
+          image: registry.localhost:5000/data-service:latest
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080

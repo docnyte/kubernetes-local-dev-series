@@ -28,7 +28,7 @@ async def health_check() -> HealthResponse:
     # Try to check data service connectivity
     try:
         async with httpx.AsyncClient(timeout=2.0) as client:
-            response = await client.get(f"{settings.data_service_url}/data/health")
+            response = await client.get(f"{settings.data_service_url}/actuator/health")
             if response.status_code == 200:
                 data_service_status = "connected"
             else:

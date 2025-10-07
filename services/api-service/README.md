@@ -247,8 +247,22 @@ This service is designed to run in Kubernetes with:
 - **Health Check**: `/api/health` for liveness/readiness probes
 - **Resource Limits**: Configured in K8s manifests
 - **Environment**: Config via ConfigMap/Secrets
+- **Logging**: Uvicorn access logs disabled (`--no-access-log`) to reduce noise from health check probes
 
 See the `k3d-setup/`, `minikube-setup/`, or `kind-setup/` directories for Kubernetes manifests.
+
+### Logging Configuration
+
+The service uses structured logging with configurable levels:
+
+- **Application logs**: Controlled via `LOG_LEVEL` environment variable (DEBUG, INFO, WARNING, ERROR)
+- **Access logs**: Disabled in production to prevent health check spam from Kubernetes probes
+- **Health checks**: K8s liveness/readiness probes hit `/api/health` every 5-10 seconds
+
+To enable access logs for debugging (local development):
+```bash
+uvicorn app.main:app --reload  # Access logs enabled by default
+```
 
 ## Development Workflow
 

@@ -79,20 +79,21 @@ env:
     nodeFilters:
       - server:0
 
-# Registry Configuration (Optional)
-# Uncomment to create a local Docker registry for faster image pulls
-# registries:
-#   create:
-#     name: k3d-registry.localhost
-#     host: "0.0.0.0"
-#     hostPort: "5000"
+# Registry Configuration
+# Creates a local Docker registry accessible from both host and cluster
+# This provides a realistic development workflow similar to production
+registries:
+  create:
+    name: registry.localhost
+    host: "0.0.0.0"
+    hostPort: "5000"
+  config: |
+    mirrors:
+      "registry.localhost:5000":
+        endpoint:
+          - http://k3d-registry.localhost:5000
 
-# Host Aliases
-# Add custom DNS entries for all nodes
-hostAliases:
-  # Allow k3s nodes to resolve host.k3d.internal to host machine
-  # This enables pods to connect to PostgreSQL on the host
-  - ip: host.k3d.internal
-    hostnames:
-      - postgres.local
-      - database.local
+# Registry Access:
+# - From host: localhost:5000
+# - From cluster: k3d-registry.localhost:5000
+# - List images: curl http://localhost:5000/v2/_catalog

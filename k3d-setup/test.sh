@@ -222,6 +222,50 @@ test_postgres_running() {
     fi
 }
 
+# Test local registry
+test_registry_running() {
+    log_info "Testing: Local registry is running"
+
+    if docker ps --format '{{.Names}}' | grep -q "k3d-registry.localhost"; then
+        test_result 0 "Local registry container is running"
+    else
+        test_result 1 "Local registry container is not running"
+    fi
+}
+
+# Test registry accessibility
+test_registry_accessible() {
+    log_info "Testing: Registry is accessible"
+
+    REGISTRY_URL="http://localhost:5000"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$REGISTRY_URL/v2/" 2>/dev/null || echo "000")
+
+    if [ "$HTTP_CODE" -eq 200 ]; then
+        test_result 0 "Registry API is accessible"
+    else
+        test_result 1 "Registry API returned $HTTP_CODE (expected 200)"
+    fi
+}
+
+# Test images in registry
+test_images_in_registry() {
+    log_info "Testing: Images are in registry"
+
+    CATALOG=$(curl -s http://localhost:5000/v2/_catalog 2>/dev/null || echo "")
+
+    if echo "$CATALOG" | grep -q "api-service"; then
+        test_result 0 "api-service image found in registry"
+    else
+        test_result 1 "api-service image not found in registry"
+    fi
+
+    if echo "$CATALOG" | grep -q "data-service"; then
+        test_result 0 "data-service image found in registry"
+    else
+        test_result 1 "data-service image not found in registry"
+    fi
+}
+
 # Display summary
 display_summary() {
     echo
@@ -271,6 +315,15 @@ main() {
     echo
 
     test_ingress_exists
+    echo
+
+    test_registry_running
+    echo
+
+    test_registry_accessible
+    echo
+
+    test_images_in_registry
     echo
 
     test_postgres_running

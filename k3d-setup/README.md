@@ -34,6 +34,7 @@ k3d is a lightweight wrapper to run k3s (Rancher Lab's minimal Kubernetes distri
 - **Kubernetes Version**: Latest k3s
 - **Nodes**: 1 server + 2 agents (workers)
 - **Ingress Controller**: Traefik (built-in)
+- **Local Registry**: registry.localhost:5000
 - **Namespace**: dev
 - **Network**: k8s-network (shared with PostgreSQL)
 
@@ -86,9 +87,9 @@ This script will:
 - ✓ Check prerequisites
 - ✓ Create k8s-network if needed
 - ✓ Start PostgreSQL if not running
-- ✓ Create k3d cluster with 1 server + 2 worker nodes
+- ✓ Create k3d cluster with 1 server + 2 worker nodes + local registry
 - ✓ Build Docker images
-- ✓ Import images to k3d
+- ✓ Push images to local registry (localhost:5000)
 - ✓ Deploy all Kubernetes resources
 - ✓ Wait for deployments to be ready
 
@@ -155,6 +156,48 @@ k3d-setup/
     └── ingress.yaml          # Traefik ingress configuration
 ```
 
+## Local Docker Registry
+
+k3d is configured with a local Docker registry that provides a realistic development workflow similar to production environments.
+
+### Registry Configuration
+
+- **Registry Name**: registry.localhost
+- **Host Port**: 5000
+- **Cluster Access**: k3d-registry.localhost:5000
+- **Host Access**: localhost:5000
+
+### Registry Usage
+
+**List images in registry:**
+```bash
+curl http://localhost:5000/v2/_catalog
+```
+
+**List tags for an image:**
+```bash
+curl http://localhost:5000/v2/api-service/tags/list
+```
+
+**Push a new image:**
+```bash
+docker tag my-app:latest localhost:5000/my-app:latest
+docker push localhost:5000/my-app:latest
+```
+
+**Update deployment to use new image:**
+```bash
+kubectl set image deployment/my-app my-app=registry.localhost:5000/my-app:latest -n dev
+```
+
+### Benefits of Local Registry
+
+✓ **Realistic workflow**: Mimics production registry pattern
+✓ **Faster updates**: No need to import images for each change
+✓ **Image versioning**: Support for multiple tags
+✓ **Cluster isolation**: Images available only to your cluster
+✓ **CI/CD testing**: Test registry-based workflows locally
+
 ## Configuration Files
 
 ### cluster-config.yaml
@@ -164,6 +207,7 @@ The main k3d configuration file defines:
 - API port exposure (6550)
 - Port mappings (80:80, 443:443)
 - Network connection (k8s-network)
+- Local Docker registry (registry.localhost:5000)
 - Traefik ingress controller settings
 
 ### Kubernetes Manifests
@@ -218,23 +262,26 @@ kubectl cluster-info
 kubectl get nodes
 ```
 
-### 3. Build Images
+### 3. Build and Push Images
 
 ```bash
 # API Service
 cd ../services/api-service
 docker build -t api-service:latest .
+docker tag api-service:latest localhost:5000/api-service:latest
+docker push localhost:5000/api-service:latest
 
 # Data Service
 cd ../services/data-service
 docker build -t data-service:latest .
+docker tag data-service:latest localhost:5000/data-service:latest
+docker push localhost:5000/data-service:latest
 ```
 
-### 4. Import Images
+### 4. Verify Images in Registry
 
 ```bash
-k3d image import api-service:latest -c k3d-local-dev
-k3d image import data-service:latest -c k3d-local-dev
+curl http://localhost:5000/v2/_catalog
 ```
 
 ### 5. Deploy Resources
@@ -317,12 +364,22 @@ kubectl get endpoints -n dev
 ### Image Management
 
 ```bash
-# List images in cluster
-docker exec k3d-k3d-local-dev-server-0 crictl images
+# List images in registry
+curl http://localhost:5000/v2/_catalog
 
-# Import new image version
+# List tags for an image
+curl http://localhost:5000/v2/api-service/tags/list
+
+# Build and push new image version
 docker build -t api-service:v2 ../services/api-service
-k3d image import api-service:v2 -c k3d-local-dev
+docker tag api-service:v2 localhost:5000/api-service:v2
+docker push localhost:5000/api-service:v2
+
+# Update deployment to use new version
+kubectl set image deployment/api-service api-service=registry.localhost:5000/api-service:v2 -n dev
+
+# Or trigger rollout with latest tag
+kubectl rollout restart deployment/api-service -n dev
 ```
 
 ## Troubleshooting
@@ -347,16 +404,24 @@ k3d cluster delete k3d-local-dev
 
 ### Pods stuck in ImagePullBackOff
 
-**Issue**: Images not imported to k3d
+**Issue**: Images not pushed to registry
 
 **Solution**:
 ```bash
+# Check registry is running
+docker ps | grep registry.localhost
+
 # Verify images exist locally
 docker images | grep service
 
-# Import images
-k3d image import api-service:latest -c k3d-local-dev
-k3d image import data-service:latest -c k3d-local-dev
+# Check images in registry
+curl http://localhost:5000/v2/_catalog
+
+# If images missing, push them
+docker tag api-service:latest localhost:5000/api-service:latest
+docker push localhost:5000/api-service:latest
+docker tag data-service:latest localhost:5000/data-service:latest
+docker push localhost:5000/data-service:latest
 
 # Restart deployments
 kubectl rollout restart deployment/api-service -n dev
@@ -434,14 +499,41 @@ ports:
 
 Then access via http://localhost:8080/api
 
+### Registry not accessible
+
+**Check registry container:**
+```bash
+docker ps | grep registry.localhost
+```
+
+**Test registry API:**
+```bash
+curl http://localhost:5000/v2/
+# Should return: {}
+```
+
+**Check registry logs:**
+```bash
+docker logs k3d-registry.localhost
+```
+
+**Restart registry:**
+```bash
+# Registry is part of cluster, restart cluster
+k3d cluster stop k3d-local-dev
+k3d cluster start k3d-local-dev
+```
+
 ## k3d vs Minikube vs kind
 
 ### k3d Advantages
 ✓ Fastest startup time (~30s)
 ✓ Lowest resource usage
 ✓ Built-in Traefik ingress
+✓ Built-in local registry support
 ✓ Easy multi-node clusters
 ✓ Native Docker integration
+✓ Production-like registry workflow
 
 ### k3d Considerations
 - Different from production k8s (k3s is minimal)

@@ -293,7 +293,10 @@ Content-Type: application/json
 [{"id":1,"name":"John Doe","email":"john@example.com"}]
 ```
 
-Configuration in `application.yml` excludes actuator endpoints and obfuscates sensitive data.
+Configuration in `application.yml`:
+- **Excludes**: `/actuator/**` endpoints to prevent health check spam
+- **Obfuscates**: Sensitive headers (Authorization) and parameters (passwords)
+- **DispatcherServlet**: Set to WARN level to reduce request logging noise
 
 ## Kubernetes Deployment
 
@@ -304,8 +307,18 @@ This service is designed to run in Kubernetes with:
 - **Database Connection**: External PostgreSQL via `host.docker.internal`
 - **Resource Limits**: Configured in K8s manifests
 - **Environment**: Config via ConfigMap/Secrets
+- **Logging**: Actuator health endpoints excluded from Logbook logging; DispatcherServlet set to WARN
 
 See the `k3d-setup/`, `minikube-setup/`, or `kind-setup/` directories for Kubernetes manifests.
+
+### Logging Configuration
+
+The service uses structured logging with health check filtering:
+
+- **Application logs**: Controlled via `LOG_LEVEL` environment variable (DEBUG, INFO, WARNING, ERROR)
+- **Logbook**: Request/response logging with actuator endpoints excluded
+- **Spring DispatcherServlet**: Set to WARN level to reduce noise from health check requests
+- **Health checks**: K8s liveness/readiness probes hit `/actuator/health/*` every 5-10 seconds
 
 ## Development Workflow
 

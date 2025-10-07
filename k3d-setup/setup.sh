@@ -135,15 +135,44 @@ build_images() {
     log_success "data-service built"
 }
 
-# Import images to k3d
-import_images() {
-    log_info "Importing images to k3d cluster..."
+# Push images to local registry
+push_to_registry() {
+    log_info "Pushing images to local registry..."
 
-    k3d image import api-service:latest -c "$CLUSTER_NAME"
-    log_success "api-service imported"
+    REGISTRY="localhost:5000"
 
-    k3d image import data-service:latest -c "$CLUSTER_NAME"
-    log_success "data-service imported"
+    # Wait for registry to be ready
+    log_info "Waiting for registry to be ready..."
+    timeout=60
+    while ! curl -s http://$REGISTRY/v2/ > /dev/null 2>&1; do
+        if [ $timeout -le 0 ]; then
+            log_error "Registry did not become ready in time"
+            exit 1
+        fi
+        sleep 2
+        ((timeout-=2))
+    done
+    log_success "Registry is ready"
+
+    # Tag and push API service
+    log_info "Tagging and pushing api-service..."
+    docker tag api-service:latest $REGISTRY/api-service:latest
+    docker push $REGISTRY/api-service:latest
+    log_success "api-service pushed to registry"
+
+    # Tag and push Data service
+    log_info "Tagging and pushing data-service..."
+    docker tag data-service:latest $REGISTRY/data-service:latest
+    docker push $REGISTRY/data-service:latest
+    log_success "data-service pushed to registry"
+
+    # Verify images in registry
+    log_info "Verifying images in registry..."
+    if curl -s http://$REGISTRY/v2/_catalog | grep -q "api-service"; then
+        log_success "Images successfully pushed to registry"
+    else
+        log_warn "Could not verify images in registry"
+    fi
 }
 
 # Deploy Kubernetes resources
@@ -235,7 +264,7 @@ main() {
     build_images
     echo
 
-    import_images
+    push_to_registry
     echo
 
     deploy_resources

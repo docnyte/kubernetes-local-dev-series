@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:17
@@ -27,10 +25,7 @@ services:
 
     # Optional: mount init scripts
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-
-    # No persistent volumes - ephemeral data for dev/testing
-    # Data will be lost on container removal
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
 
 networks:
   k8s-network:
