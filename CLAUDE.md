@@ -125,6 +125,7 @@ curl → Ingress → API Service (FastAPI) → Data Service (Spring Boot) → Po
 - `POSTGRES_USER`: `postgres`
 - `POSTGRES_PASSWORD`: `postgres`
 - `POSTGRES_DB`: `devdb`
+- **No persistent volumes**: Data is ephemeral for dev/testing (intentional design choice)
 
 ## API Endpoints
 
@@ -178,7 +179,7 @@ curl → Ingress → API Service (FastAPI) → Data Service (Spring Boot) → Po
 
 2. **Consistency**: When modifying manifests for one tool, apply similar changes to other tool setups unless there's a tool-specific reason not to.
 
-3. **External Database**: PostgreSQL MUST remain outside Kubernetes to demonstrate cross-network communication patterns.
+3. **External Database**: PostgreSQL MUST remain outside Kubernetes to demonstrate cross-network communication patterns. The database uses no persistent volumes - data is ephemeral and resets on container removal, providing a clean state for each test run.
 
 4. **Educational Focus**: Code should be readable and well-commented for blog readers learning Kubernetes.
 

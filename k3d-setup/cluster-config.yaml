@@ -1,1 +1,98 @@
-# TODO: Configure k3d cluster
+# k3d Cluster Configuration File
+# API Version: k3d.io/v1alpha5
+# Documentation: https://k3d.io/stable/usage/configfile/
+#
+# This configuration creates a local Kubernetes cluster for the three-tier
+# microservices architecture demo (FastAPI → Spring Boot → PostgreSQL).
+#
+# Cluster Topology:
+# - 1 server node (control plane)
+# - 2 agent nodes (workers)
+# - Built-in load balancer (Traefik ingress controller)
+
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+
+metadata:
+  name: k3d-local-dev
+
+# Cluster Topology
+servers: 1
+agents: 2
+
+# Kubernetes API Server Configuration
+kubeAPI:
+  # Expose API on all interfaces for easy access
+  hostIP: "0.0.0.0"
+  # Custom port to avoid conflicts (default: 6443)
+  hostPort: "6550"
+
+# K3s Image Version
+# Using latest stable version - can pin to specific version for reproducibility
+# Example: rancher/k3s:v1.28.5-k3s1
+image: rancher/k3s:latest
+
+# Network Configuration
+# Connect to existing k8s-network to communicate with external PostgreSQL
+network: k8s-network
+
+# Port Mappings
+# Maps host ports to container ports on specific nodes
+ports:
+  # HTTP traffic to Traefik ingress controller
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  # HTTPS traffic to Traefik ingress controller
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+
+# K3s Server Arguments
+# Customize k3s behavior on server nodes
+options:
+  k3s:
+    extraArgs:
+      # Server-specific arguments
+      - arg: --disable=traefik-metrics
+        nodeFilters:
+          - server:*
+      # Disable servicelb metrics (reduce resource usage)
+      - arg: --disable=metrics-server
+        nodeFilters:
+          - server:*
+
+  # k3d Runtime Options
+  k3d:
+    # Wait for cluster to be ready before returning
+    wait: true
+    # Timeout for cluster readiness
+    timeout: "120s"
+    # Disable automatic load balancer image updates
+    disableLoadbalancer: false
+
+# Environment Variables
+# Applied to all nodes unless filtered
+env:
+  # Enable detailed k3s logging (useful for debugging)
+  - envVar: K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml
+    nodeFilters:
+      - server:0
+
+# Registry Configuration (Optional)
+# Uncomment to create a local Docker registry for faster image pulls
+# registries:
+#   create:
+#     name: k3d-registry.localhost
+#     host: "0.0.0.0"
+#     hostPort: "5000"
+
+# Host Aliases
+# Add custom DNS entries for all nodes
+hostAliases:
+  # Allow k3s nodes to resolve host.k3d.internal to host machine
+  # This enables pods to connect to PostgreSQL on the host
+  - ip: host.k3d.internal
+    hostnames:
+      - postgres.local
+      - database.local

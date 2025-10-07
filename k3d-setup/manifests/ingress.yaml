@@ -1,1 +1,46 @@
-# TODO: Define ingress configuration
+# Ingress Configuration for Traefik
+# k3d uses Traefik as the default ingress controller
+#
+# This configuration exposes the API service via HTTP
+# Access: http://localhost/api/*
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: dev
+  labels:
+    app: api-service
+    component: ingress
+  annotations:
+    # Traefik-specific annotations
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # Strip path prefix if needed (optional)
+    # traefik.ingress.kubernetes.io/router.middlewares: dev-strip-api-prefix@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    # Default rule - matches any hostname (localhost, 127.0.0.1, etc.)
+    - http:
+        paths:
+          # Route /api/* to api-service
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8000
+
+---
+# Optional: Middleware to strip /api prefix
+# Uncomment if you want requests to reach the service without /api
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: strip-api-prefix
+#   namespace: dev
+# spec:
+#   stripPrefix:
+#     prefixes:
+#       - /api

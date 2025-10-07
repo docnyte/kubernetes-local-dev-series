@@ -1,0 +1,28 @@
+# ConfigMap for Application Configuration
+# Stores non-sensitive configuration data for both services
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: dev
+  labels:
+    app: microservices
+    component: config
+data:
+  # API Service Configuration
+  API_PORT: "8000"
+  API_LOG_LEVEL: "INFO"
+  DATA_SERVICE_URL: "http://data-service:8080"
+
+  # Data Service Configuration
+  DATA_PORT: "8080"
+  DATA_LOG_LEVEL: "INFO"
+
+  # Database Configuration (non-sensitive)
+  DB_HOST: "host.k3d.internal"
+  DB_PORT: "5432"
+  DB_NAME: "devdb"
+
+  # Java Options for Data Service
+  JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
