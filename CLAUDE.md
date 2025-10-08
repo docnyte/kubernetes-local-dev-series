@@ -26,7 +26,8 @@ kubernetes-local-dev-series/
 │   └── postgres/             # Standalone Docker container
 ├── k3d-setup/
 │   ├── manifests/            # K8s YAML files
-│   └── setup.sh              # Cluster creation + deployment
+│   ├── cluster-config.yaml   # k3d cluster configuration
+│   └── README.md             # Step-by-step setup instructions
 ├── minikube-setup/
 │   ├── manifests/
 │   └── setup.sh
@@ -70,11 +71,11 @@ docker-compose up -d
 ```
 
 ### Deploy to Kubernetes
-```bash
-# k3d example
-cd k3d-setup
-./setup.sh
 
+**k3d**: Follow the step-by-step instructions in `k3d-setup/README.md`. The educational approach uses individual commands instead of scripts to help learners understand each step.
+
+**Minikube and kind**: Use the provided setup scripts:
+```bash
 # Minikube example
 cd minikube-setup
 ./setup.sh
@@ -86,7 +87,9 @@ cd kind-setup
 
 ### Testing
 ```bash
-# Test specific setup
+# k3d: Follow testing instructions in k3d-setup/README.md
+
+# Test Minikube or kind setups
 cd <tool>-setup
 ./test.sh
 
@@ -181,7 +184,7 @@ curl → Ingress → API Service (FastAPI) → Data Service (Spring Boot) → Po
 
 3. **External Database**: PostgreSQL MUST remain outside Kubernetes to demonstrate cross-network communication patterns. The database uses no persistent volumes - data is ephemeral and resets on container removal, providing a clean state for each test run.
 
-4. **Educational Focus**: Code should be readable and well-commented for blog readers learning Kubernetes.
+4. **Educational Focus**: Code and documentation should be readable and well-commented for blog readers learning Kubernetes. The k3d setup uses manual commands in README.md instead of scripts to enhance learning and understanding. When working with k3d setup, always prefer documenting commands over creating scripts.
 
 ## Network Debugging
 
