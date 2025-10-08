@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:17
     container_name: postgres-devdb
-    restart: unless-stopped
+    restart: no
 
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-devdb}
