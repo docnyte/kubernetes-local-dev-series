@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: api-service
-          image: registry.localhost:5000/api-service:latest
+          image: k8s-registry.localhost:5001/api-service:latest
           imagePullPolicy: Always
           ports:
             - name: http

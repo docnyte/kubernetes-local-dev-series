@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: data-service
-          image: registry.localhost:5000/data-service:latest
+          image: k8s-registry.localhost:5001/data-service:latest
           imagePullPolicy: Always
           ports:
             - name: http

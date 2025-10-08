@@ -35,7 +35,7 @@ graph TB
 - **Kubernetes Version**: Latest k3s
 - **Nodes**: 1 server + 2 agents (workers)
 - **Ingress Controller**: Traefik (built-in)
-- **Local Registry**: registry.localhost:5000
+- **Local Registry**: k8s-registry.localhost:5001
 - **Namespace**: dev
 - **Network**: k8s-network (shared with PostgreSQL)
 
@@ -107,7 +107,7 @@ docker-compose up -d
 docker ps | grep postgres-devdb
 
 # Return to k3d-setup directory
-cd ..
+cd ../..
 ```
 
 **Note**: PostgreSQL runs outside Kubernetes to demonstrate cross-network communication patterns.
@@ -126,7 +126,7 @@ k3d cluster create --config cluster-config.yaml
 # This creates:
 # - 1 server node (control plane)
 # - 2 agent nodes (workers)
-# - Local Docker registry at localhost:5000
+# - Local Docker registry at localhost:5001
 # - Traefik ingress controller
 # - Connection to k8s-network
 ```
@@ -170,19 +170,19 @@ The k3d cluster includes a local Docker registry. Push your images to it:
 
 ```bash
 # Tag api-service for local registry
-docker tag api-service:latest localhost:5000/api-service:latest
+docker tag api-service:latest localhost:5001/api-service:latest
 
 # Push api-service to registry
-docker push localhost:5000/api-service:latest
+docker push localhost:5001/api-service:latest
 
 # Tag data-service for local registry
-docker tag data-service:latest localhost:5000/data-service:latest
+docker tag data-service:latest localhost:5001/data-service:latest
 
 # Push data-service to registry
-docker push localhost:5000/data-service:latest
+docker push localhost:5001/data-service:latest
 
 # Verify images are in registry
-curl http://localhost:5000/v2/_catalog
+curl http://localhost:5001/v2/_catalog
 # Should show: {"repositories":["api-service","data-service"]}
 ```
 
@@ -340,8 +340,8 @@ docker network rm k8s-network
 # Optional: Remove built images from local Docker
 docker rmi api-service:latest
 docker rmi data-service:latest
-docker rmi localhost:5000/api-service:latest
-docker rmi localhost:5000/data-service:latest
+docker rmi localhost:5001/api-service:latest
+docker rmi localhost:5001/data-service:latest
 ```
 
 ## Additional Resources
