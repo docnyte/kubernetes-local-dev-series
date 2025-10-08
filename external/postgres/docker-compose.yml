@@ -29,5 +29,4 @@ services:
 
 networks:
   k8s-network:
-    name: k8s-network
-    driver: bridge
+    external: true
