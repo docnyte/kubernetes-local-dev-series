@@ -327,8 +327,14 @@ kubectl port-forward svc/api-service 8000:8000 -n dev
 When you're done, clean up all resources:
 
 ```bash
-# Delete the k3d cluster (removes cluster, registry, and all resources)
+# Delete the k3d cluster
 k3d cluster delete k3d-local-dev
+
+# Delete the registry container (not automatically removed with cluster)
+docker rm -f k3d-k8s-registry.localhost
+
+# Remove registry volume (if it exists)
+docker volume rm k3d-k8s-registry.localhost 2>/dev/null || true
 
 # Stop PostgreSQL container
 cd ../external/postgres
