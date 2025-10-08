@@ -176,6 +176,10 @@ curl → Ingress → API Service (FastAPI) → Data Service (Spring Boot) → Po
 - Use ConfigMaps for config, Secrets for credentials
 - Consistent labels: `app`, `component`, `tier`
 
+### Documentation
+- Use Mermaid format for all diagrams in README files
+- Keep documentation clean, concise, and educational
+
 ## Critical Design Principles
 
 1. **Shared Services**: The same services/ directory code is used across all three K8s tools. Never create tool-specific service code.
